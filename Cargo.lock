@@ -5157,7 +5157,6 @@ dependencies = [
  "bevy",
  "bevy_dolly",
  "bevy_hanabi",
- "game_app",
  "space_bevy_xpbd_plugin",
  "space_editor_ui",
  "space_prefab",

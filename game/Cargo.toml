@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 authors = ["Mathew Sherry <mjsherry248@gmail.com>"]
-description = "Your game description"
+description = "Artifice magic on an alien world"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]

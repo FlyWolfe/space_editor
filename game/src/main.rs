@@ -2,8 +2,7 @@ use bevy::{
     input::mouse::MouseMotion,
     pbr::{ExtendedMaterial, MaterialExtension, OpaqueRendererMethod},
     prelude::*,
-    reflect::TypePath,
-    render::{color, render_resource::{AsBindGroup, ShaderRef}},
+    render::render_resource::{AsBindGroup, ShaderRef},
     transform::TransformSystem,
     window::{WindowMode, WindowResolution},
 };
@@ -11,7 +10,6 @@ use bevy_dolly::prelude::*;
 use character_controller::*;
 use game_lib::GamePlugin;
 use game_management::GameLayer;
-use shape::Capsule;
 use space_bevy_xpbd_plugin::prelude::bevy_xpbd_3d::prelude::*;
 use space_bevy_xpbd_plugin::XpbdPlugin;
 use space_prefab::prelude::{PrefabBundle, PrefabPlugin};
@@ -76,7 +74,7 @@ fn setup(
     // Player
     commands.spawn((
         MaterialMeshBundle {
-            mesh: meshes.add(Capsule3d::new(0.5, 1.0)),
+            mesh: meshes.add(Capsule3d::new(0.4, 1.0)),
             transform: Transform::from_xyz(0.0, 1.0, 0.0),
             material: materials.add(ExtendedMaterial {
                 base: StandardMaterial {

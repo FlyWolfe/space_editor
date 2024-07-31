@@ -89,7 +89,7 @@ bevy_xpbd_3d = { version = "0.4.2", default-features = false }
 bevy.workspace = true
 space_editor_ui.workspace = true
 space_prefab.workspace = true
-game_app.workspace = true
+#game_app.workspace = true
 
 # Modules for external crates
 space_bevy_xpbd_plugin = { workspace = true, optional = true }
