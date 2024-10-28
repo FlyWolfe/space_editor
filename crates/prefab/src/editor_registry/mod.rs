@@ -3,7 +3,7 @@ use std::sync::Arc;
 use bevy::{
     ecs::system::{EntityCommand, EntityCommands},
     prelude::*,
-    reflect::{GetTypeRegistration, TypeRegistryArc},
+    reflect::{GetTypeRegistration, TypeRegistration, TypeRegistryArc},
     utils::{HashMap, HashSet},
 };
 use space_shared::*;
@@ -145,7 +145,11 @@ impl EditorRegistry {
     >(
         &mut self,
     ) {
-        self.registry.write().register::<T>();
+        info!("Registering component: {}", std::any::type_name::<T>());
+        // self.registry.write().register::<T>();
+        self.registry
+            .write()
+            .add_registration(T::get_type_registration());
         self.spawn_components.insert(
             T::get_type_registration().type_id(),
             AddDefaultComponent::new::<T>(),
@@ -163,7 +167,13 @@ impl EditorRegistry {
     >(
         &mut self,
     ) {
-        self.registry.write().register::<T>();
+        info!(
+            "Silent registering component: {}",
+            std::any::type_name::<T>()
+        );
+        self.registry
+            .write()
+            .add_registration(T::get_type_registration());
         self.spawn_components.insert(
             T::get_type_registration().type_id(),
             AddDefaultComponent::new::<T>(),
@@ -276,10 +286,19 @@ impl EditorRegistryExt for App {
     >(
         &mut self,
     ) -> &mut Self {
-        if let Some(mut registry) = self.world.get_resource_mut::<EditorRegistry>() {
-            registry.register::<T>()
-        }
-        self.world.init_component::<T>();
+        if let Some(mut registry) = self.world_mut().get_resource_mut::<EditorRegistry>() {
+            registry.register::<T>();
+            if registry
+                .registry
+                .read()
+                .get_type_data::<ReflectComponent>(T::get_type_registration().type_id())
+                .is_none()
+            {
+                warn!("Component {} has no #[reflect(Component)] attribute. It will not allow to be saved in prefab", std::any::type_name::<T>());
+            }
+        };
+
+        self.world_mut().init_component::<T>();
         self.register_type::<T>();
         self.auto_reflected_undo::<T>();
         self
@@ -290,10 +309,10 @@ impl EditorRegistryExt for App {
     >(
         &mut self,
     ) -> &mut Self {
-        if let Some(mut registry) = self.world.get_resource_mut::<EditorRegistry>() {
+        if let Some(mut registry) = self.world_mut().get_resource_mut::<EditorRegistry>() {
             registry.only_clone_register::<T>()
         }
-        self.register_type::<T>();
+        self.editor_registry::<T>();
         self
     }
 
@@ -302,7 +321,7 @@ impl EditorRegistryExt for App {
     >(
         &mut self,
     ) -> &mut Self {
-        if let Some(mut registry) = self.world.get_resource_mut::<EditorRegistry>() {
+        if let Some(mut registry) = self.world_mut().get_resource_mut::<EditorRegistry>() {
             registry.silent_register::<T>()
         }
         self.register_type::<T>();
@@ -360,9 +379,9 @@ impl EditorRegistryExt for App {
         #[cfg(not(feature = "no_event_registration"))]
         {
             self.register_type::<T>();
-            self.world.init_resource::<T>();
+            self.world_mut().init_resource::<T>();
         }
-        if let Some(mut registry) = self.world.get_resource_mut::<EditorRegistry>() {
+        if let Some(mut registry) = self.world_mut().get_resource_mut::<EditorRegistry>() {
             registry.event_register::<T>()
         }
         self
@@ -415,7 +434,7 @@ fn relation_system<T: Component, Relation: Component + Default>(
 
 #[cfg(test)]
 mod tests {
-    use bevy::{ecs::system::CommandQueue, prelude::*};
+    use bevy::{ecs::world::CommandQueue, prelude::*};
 
     use super::*;
 
@@ -432,8 +451,8 @@ mod tests {
             });
         app.update();
 
-        let mut query = app.world.query::<(&Name, &TestRelation)>();
-        let s = query.single(&app.world);
+        let mut query = app.world_mut().query::<(&Name, &TestRelation)>();
+        let s = query.single(&app.world());
 
         assert_eq!(s.0, &Name::from("value"));
     }
@@ -453,8 +472,8 @@ mod tests {
         });
         app.update();
 
-        let mut query = app.world.query::<(&Name, &TestRelation)>();
-        let s = query.single(&app.world);
+        let mut query = app.world_mut().query::<(&Name, &TestRelation)>();
+        let s = query.single(&app.world());
 
         assert_eq!(s.0, &Name::from("value"));
     }
@@ -468,24 +487,28 @@ mod tests {
         app.editor_registry::<Name>();
 
         let name = "name";
-        let e = app.world.spawn(Name::new(name)).id();
+        let e = app.world_mut().spawn(Name::new(name)).id();
 
         let new_e_id;
         {
             let mut command_queue = CommandQueue::default();
-            let mut cmds = Commands::new(&mut command_queue, &app.world);
+            let mut cmds = Commands::new(&mut command_queue, &app.world());
 
             let mut new_e = cmds.spawn_empty();
             new_e_id = new_e.id();
 
-            app.world
+            app.world()
                 .resource::<EditorRegistry>()
-                .clone_entity_flat(&mut new_e, &app.world.entity(e));
-            command_queue.apply(&mut app.world);
+                .clone_entity_flat(&mut new_e, &app.world().entity(e));
+            command_queue.apply(app.world_mut());
         }
 
         assert_eq!(
-            app.world.entity(new_e_id).get::<Name>().unwrap().as_str(),
+            app.world_mut()
+                .entity(new_e_id)
+                .get::<Name>()
+                .unwrap()
+                .as_str(),
             name
         );
     }
@@ -510,26 +533,26 @@ mod tests {
         );
         assert_eq!(send_event.type_id, TypeId::of::<AnEvent>());
 
-        send_event.send(&mut app.world);
+        send_event.send(&mut app.world_mut());
         app.update();
 
-        let events = app.world.resource::<Events<AnEvent>>();
+        let events = app.world_mut().resource::<Events<AnEvent>>();
         let mut events_reader = events.get_reader();
         let an_event = events_reader.read(events).next().unwrap();
 
         // Check the event has been sent
         assert_eq!(an_event.val, 0);
-        let mut events = app.world.resource_mut::<Events<AnEvent>>();
+        let mut events = app.world_mut().resource_mut::<Events<AnEvent>>();
         events.clear();
 
         // Change send event value
-        app.world.resource_mut::<AnEvent>().val = 17;
+        app.world_mut().resource_mut::<AnEvent>().val = 17;
         app.update();
 
-        send_event.send(&mut app.world);
+        send_event.send(app.world_mut());
         app.update();
 
-        let events = app.world.resource::<Events<AnEvent>>();
+        let events = app.world_mut().resource::<Events<AnEvent>>();
         let mut events_reader = events.get_reader();
         let an_event = events_reader.read(events).next().unwrap();
 
@@ -559,8 +582,8 @@ mod tests {
 
         app.update();
 
-        let mut query = app.world.query::<(&Name, &Named)>();
-        let s = query.single(&app.world);
+        let mut query = app.world_mut().query::<(&Name, &Named)>();
+        let s = query.single(app.world());
         assert_eq!(s.1.name, "value");
     }
 
@@ -577,7 +600,7 @@ mod tests {
             .add_event::<AnEvent>();
         app.update();
 
-        let registry = app.world.resource::<EditorRegistry>();
+        let registry = app.world_mut().resource::<EditorRegistry>();
         assert_eq!("AnEvent", registry.send_events.first().unwrap().name);
     }
 
@@ -590,23 +613,23 @@ mod tests {
 
         let name = "name";
         let e = app
-            .world
+            .world_mut()
             .spawn((Name::new(name), VisibilityBundle::default()))
             .id();
 
         {
             let mut command_queue = CommandQueue::default();
-            let mut cmds = Commands::new(&mut command_queue, &app.world);
+            let mut cmds = Commands::new(&mut command_queue, app.world());
 
-            app.world
+            app.world()
                 .resource::<EditorRegistry>()
                 .remove_by_id(&mut cmds.entity(e), &TypeId::of::<Name>());
-            command_queue.apply(&mut app.world);
+            command_queue.apply(app.world_mut());
         }
 
-        assert_eq!(app.world.entity(e).get::<Name>(), None);
+        assert_eq!(app.world_mut().entity(e).get::<Name>(), None);
         assert_eq!(
-            app.world.entity(e).get::<Visibility>(),
+            app.world_mut().entity(e).get::<Visibility>(),
             Some(&Visibility::Inherited)
         );
     }
@@ -624,22 +647,22 @@ mod tests {
 
         let name = "name";
         let e = app
-            .world
+            .world_mut()
             .spawn((Name::new(name), VisibilityBundle::default()))
             .id();
 
         let mut command_queue = CommandQueue::default();
 
         let add = app
-            .world
+            .world_mut()
             .resource::<EditorRegistry>()
             .get_spawn_command(&TypeId::of::<AStruct>());
-        command_queue.apply(&mut app.world);
+        command_queue.apply(app.world_mut());
 
-        (add.func)(e, &mut app.world);
+        (add.func)(e, app.world_mut());
 
         assert_eq!(
-            app.world.entity(e).get::<AStruct>(),
+            app.world_mut().entity(e).get::<AStruct>(),
             Some(&AStruct { boolean: false })
         );
     }

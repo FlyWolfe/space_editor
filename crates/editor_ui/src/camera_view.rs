@@ -271,7 +271,7 @@ impl EditorTab for CameraViewTab {
 
 fn clean_camera_view_tab(
     mut ui_state: ResMut<CameraViewTab>,
-    mut cameras: Query<(&mut Camera, &mut Transform), Without<EditorCameraMarker>>,
+    mut cameras: Query<(&mut Camera, &mut GlobalTransform), Without<EditorCameraMarker>>,
 ) {
     let Some(real_cam_entity) = ui_state.real_camera else {
         return;
@@ -298,7 +298,10 @@ fn set_camera_viewport(
     mut local: Local<LastCamTabRect>,
     mut ui_state: ResMut<CameraViewTab>,
     primary_window: Query<&mut Window, With<PrimaryWindow>>,
-    mut cameras: Query<(&mut Camera, &mut Transform), Without<EditorCameraMarker>>,
+    mut cameras: Query<
+        (&mut Camera, &mut GlobalTransform, &mut Transform),
+        Without<EditorCameraMarker>,
+    >,
     mut ctxs: EguiContexts,
     images: Res<Assets<Image>>,
 ) {
@@ -325,10 +328,10 @@ fn set_camera_viewport(
         ui_state.need_reinit_egui_tex = false;
     }
 
-    let Ok([(mut real_cam, mut real_cam_transform), (watch_cam, camera_transform)]) =
+    let Ok([(mut real_cam, _, mut real_cam_local_transform), (watch_cam, camera_transform, _)]) =
         cameras.get_many_mut([real_cam_entity, camera_entity])
     else {
-        if let Ok((mut real_cam, _)) = cameras.get_mut(real_cam_entity) {
+        if let Ok((mut real_cam, _, _)) = cameras.get_mut(real_cam_entity) {
             real_cam.is_active = false;
             ui_state.camera_entity = None;
         }
@@ -355,11 +358,11 @@ fn set_camera_viewport(
     };
     real_cam.target = RenderTarget::Image(target_handle.clone());
 
-    *real_cam_transform = *camera_transform;
+    *real_cam_local_transform = camera_transform.compute_transform();
 
     local.0 = Some(viewport_rect);
 
-    let Some(image_data) = images.get(target_handle) else {
+    let Some(image_data) = images.get(target_handle.id()) else {
         error!("Could not get image data");
         return;
     };
