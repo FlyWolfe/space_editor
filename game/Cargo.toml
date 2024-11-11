@@ -26,7 +26,6 @@ linker = "rust-lld.exe"
 [lib]
 name = "game_lib"
 path = "src/lib.rs"
-required-features = ["bevy_xpbd_3d"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -35,5 +34,6 @@ bevy.workspace = true
 space_prefab.workspace = true
 workspace-hakari = { version = "0.1", path = "../workspace-hakari" }
 belly = { git = "https://github.com/jkb0o/belly.git" }
-bevy_dolly = { version = "0.0.3" }
+bevy_dolly = { version = "0.0.4" }
 bevy_hanabi = "0.11.0"
+avian3d = "0.1.2"

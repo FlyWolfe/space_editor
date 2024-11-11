@@ -1,8 +1,7 @@
 use bevy::{ecs::query::QuerySingleError, pbr::{ExtendedMaterial, OpaqueRendererMethod}, prelude::*};
-use space_bevy_xpbd_plugin::prelude::bevy_xpbd_3d::{
-    components::{CollisionLayers, LinearVelocity, RigidBody},
+use avian3d::{
     math::Vector3,
-    prelude::{Collider, RayCaster, RayHits},
+    prelude::*,
 };
 
 use crate::{character_controller::CharacterController, game_management::GameLayer, MainCamera, MyExtension};

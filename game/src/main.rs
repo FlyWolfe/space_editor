@@ -1,17 +1,11 @@
 use bevy::{
-    input::mouse::MouseMotion,
-    pbr::{ExtendedMaterial, MaterialExtension, OpaqueRendererMethod},
-    prelude::*,
-    render::render_resource::{AsBindGroup, ShaderRef},
-    transform::TransformSystem,
-    window::{WindowMode, WindowResolution},
+    input::mouse::MouseMotion, math::Dir3, pbr::{ExtendedMaterial, MaterialExtension, OpaqueRendererMethod}, prelude::*, render::render_resource::{AsBindGroup, ShaderRef}, transform::TransformSystem, window::{WindowMode, WindowResolution}
 };
 use bevy_dolly::prelude::*;
 use character_controller::*;
 use game_lib::GamePlugin;
 use game_management::GameLayer;
-use space_bevy_xpbd_plugin::prelude::bevy_xpbd_3d::prelude::*;
-use space_bevy_xpbd_plugin::XpbdPlugin;
+use avian3d::prelude::*;
 use space_prefab::prelude::{PrefabBundle, PrefabPlugin};
 
 mod character_controller;
@@ -36,13 +30,11 @@ fn main() {
         }),
         ..default()
     }))
-    .add_plugins((
-        PrefabPlugin,
-        CharacterControllerPlugin,
-        DollyCursorGrab,
-        GamePlugin,
-        XpbdPlugin,
-    ))
+    .add_plugins(PrefabPlugin)
+    .add_plugins(CharacterControllerPlugin)
+    .add_plugins(DollyCursorGrab)
+    .add_plugins(GamePlugin)
+    .add_plugins(avian3d::PhysicsPlugins::default().with_length_unit(100.0),)
     .add_plugins(MaterialPlugin::<
         ExtendedMaterial<StandardMaterial, MyExtension>,
     >::default())
@@ -122,7 +114,7 @@ fn setup(
             transform: Transform::from_xyz(0., 1., 5.).looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         },
-        RayCaster::new(Vec3::ZERO, Direction3d::X),
+        RayCaster::new(Vec3::ZERO, Dir3::X),
     ));
 }
 

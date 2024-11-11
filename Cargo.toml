@@ -90,8 +90,9 @@ game_app.workspace = true
 
 # Modules for external crates
 workspace-hakari = { version = "0.1", path = "workspace-hakari" }
-bevy_dolly = "0.0.3"
+bevy_dolly = "0.0.4"
 bevy_hanabi = "0.11.0"
+avian3d = "0.1.2"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 backtrace-on-stack-overflow = {version = "0.3", optional = true}
