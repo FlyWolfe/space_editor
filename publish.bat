@@ -24,7 +24,7 @@ timeout /t 600
 cd ..
 cd ..
 cd modules
-cd bevy_xpbd_plugin
+cd avian3d
 cargo publish
 timeout /t 600
 cd ..

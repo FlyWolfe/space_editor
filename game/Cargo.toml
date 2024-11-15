@@ -1,6 +1,6 @@
 [package]
 name = "game_app"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 authors = ["Mathew Sherry <mjsherry248@gmail.com>"]
@@ -33,6 +33,7 @@ path = "src/lib.rs"
 bevy.workspace = true
 space_prefab.workspace = true
 workspace-hakari = { version = "0.1", path = "../workspace-hakari" }
+space_avian3d_plugin = { version = "0.6.0", path = "../modules/avian3d_plugin" }
 belly = { git = "https://github.com/jkb0o/belly.git" }
 bevy_dolly = { version = "0.0.4" }
 bevy_hanabi = "0.11.0"

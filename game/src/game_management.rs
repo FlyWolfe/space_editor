@@ -6,5 +6,4 @@ pub enum GameLayer {
     Player,
     Enemy,
     Ground,
-    Projectile,
 }

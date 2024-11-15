@@ -18,7 +18,8 @@ members = [
     "game",
     "crates/*",
     "external/editor_as_plugin", 
-    "workspace-hakari"
+    "workspace-hakari",
+    "modules/avian3d_plugin"
 ]
 
 resolver = "2"
@@ -80,7 +81,8 @@ ron = "0.8"
 serde = "1"
 
 # Community Modules
-game_app = { version = "0.1.0", path = "game" }
+space_avian3d_plugin = { version = "0.6.0", path = "modules/avian3d_plugin"}
+game_app = { version = "0.0.1", path = "game" }
 
 [dependencies]
 bevy.workspace = true
@@ -89,6 +91,7 @@ space_prefab.workspace = true
 game_app.workspace = true
 
 # Modules for external crates
+space_avian3d_plugin = { version = "0.1.0", workspace = true }
 workspace-hakari = { version = "0.1", path = "workspace-hakari" }
 bevy_dolly = "0.0.4"
 bevy_hanabi = "0.11.0"
@@ -125,6 +128,8 @@ too_many_arguments = { level = "allow", priority = 2 }
 [lints]
 workspace = true
 
+[profile.dev.package.avian3d]
+opt-level = 3
 
 [profile.dev]
 opt-level = 1

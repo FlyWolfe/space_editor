@@ -4,20 +4,20 @@ use bevy::{
 use bevy_dolly::prelude::*;
 use character_controller::*;
 use game_lib::GamePlugin;
+use space_avian3d_lib::prelude::*;
 use game_management::GameLayer;
 use avian3d::prelude::*;
 use space_prefab::prelude::{PrefabBundle, PrefabPlugin};
 
 mod character_controller;
 mod game_management;
-mod projectile;
 
 // The component tag used to parent to a Dolly Rig
 #[derive(Component)]
 pub struct MainCamera;
 
 fn main() {
-    let mut app = App::new();
+    let mut app = App::default();
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
             resizable: true,
@@ -30,11 +30,11 @@ fn main() {
         }),
         ..default()
     }))
-    .add_plugins(PrefabPlugin)
+    .add_plugins((PrefabPlugin, Avian3dPlugin))
     .add_plugins(CharacterControllerPlugin)
     .add_plugins(DollyCursorGrab)
     .add_plugins(GamePlugin)
-    .add_plugins(avian3d::PhysicsPlugins::default().with_length_unit(100.0),)
+    //.add_plugins(avian3d::PhysicsPlugins::default().with_length_unit(100.0))
     .add_plugins(MaterialPlugin::<
         ExtendedMaterial<StandardMaterial, MyExtension>,
     >::default())
@@ -47,8 +47,6 @@ fn main() {
             .after(PhysicsSet::Sync)
             .before(TransformSystem::TransformPropagate),
     )
-    .add_systems(Update, projectile::mouse_input)
-    .add_systems(Update, projectile::update_projectiles)
     .run();
 }
 
@@ -56,34 +54,16 @@ fn setup(
     mut commands: Commands,
     _assets: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, MyExtension>>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    //mut materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, MyExtension>>>,
 ) {
     // prefab loaded by adding PrefabLoader component to any entity (it will be parent of prefab) or with prefab bundle
     commands
-        .spawn(PrefabBundle::new("scenes/play_scene.scn.ron"))
-        .insert(Name::new("Prefab"));
+        .spawn(PrefabBundle::new("scenes/lofi_test.scn.ron"))
+        .insert(Name::new("Scene_Prefab"));
 
     // Player
     commands.spawn((
-        MaterialMeshBundle {
-            mesh: meshes.add(Capsule3d::new(0.4, 1.0)),
-            transform: Transform::from_xyz(0.0, 1.0, 0.0),
-            material: materials.add(ExtendedMaterial {
-                base: StandardMaterial {
-                    base_color: Color::rgb(0.1, 0.1, 0.8),
-                    // can be used in forward or deferred mode.
-                    opaque_render_method: OpaqueRendererMethod::Auto,
-                    // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
-                    // in forward mode, the output can also be modified after lighting is applied.
-                    // see the fragment shader `extended_material.wgsl` for more info.
-                    // Note: to run in deferred mode, you must also add a `DeferredPrepass` component to the camera and either
-                    // change the above to `OpaqueRendererMethod::Deferred` or add the `DefaultOpaqueRendererMethod` resource.
-                    ..Default::default()
-                },
-                extension: MyExtension { quantize_steps: 3 },
-            }),
-            ..default()
-        },
         CharacterControllerBundle::new(Collider::capsule(1.0, 0.4)).with_movement(
             100.0,
             0.92,
@@ -108,10 +88,9 @@ fn setup(
             .with(YawPitch::new().yaw_degrees(0.0).pitch_degrees(-30.0))
             .with(Smooth::new_position(0.3))
             .with(Smooth::new_rotation(0.3))
-            .with(Arm::new((Vec3::Z * 10.0) + (Vec3::Y * 1.0)))
             .build(),
         Camera3dBundle {
-            transform: Transform::from_xyz(0., 1., 5.).looking_at(Vec3::ZERO, Vec3::Y),
+            transform: Transform::from_xyz(0., 0., 0.).looking_at(Vec3::Z, Vec3::Y),
             ..Default::default()
         },
         RayCaster::new(Vec3::ZERO, Dir3::X),

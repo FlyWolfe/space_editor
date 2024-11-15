@@ -4,5 +4,7 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     #[allow(unused_variables)]
-    fn build(&self, app: &mut App) {}
+    fn build(&self, app: &mut App) {
+        
+    }
 }

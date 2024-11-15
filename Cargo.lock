@@ -3847,13 +3847,14 @@ dependencies = [
 
 [[package]]
 name = "game_app"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "avian3d",
  "belly",
  "bevy 0.14.2",
  "bevy_dolly",
  "bevy_hanabi",
+ "space_avian3d_plugin",
  "space_prefab",
  "workspace-hakari",
 ]
@@ -6499,6 +6500,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "space_avian3d_plugin"
+version = "0.6.0"
+dependencies = [
+ "avian3d",
+ "bevy 0.14.2",
+ "bevy-inspector-egui",
+ "space_editor_ui",
+]
+
+[[package]]
 name = "space_editor"
 version = "0.6.0"
 dependencies = [
@@ -6508,6 +6519,7 @@ dependencies = [
  "bevy_dolly",
  "bevy_hanabi",
  "game_app",
+ "space_avian3d_plugin",
  "space_editor_ui",
  "space_prefab",
  "workspace-hakari",
